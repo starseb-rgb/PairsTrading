@@ -27,7 +27,7 @@ def execute_order(api: tradeapi.rest.REST,
                   qty: float,
                   side=str,
                   order_type='market',
-                  time_in_force='gtc'):
+                  time_in_force='day'):
     """
     executes buy order
     :param api: alpaca REST api connection
@@ -58,8 +58,26 @@ def info(api: tradeapi.rest.REST):
     ''')
 
 
-if __name__=='__main__':
+if __name__ == '__main__':
     trade_api = connect_api()
-    test_buy = execute_order(trade_api, 'AAPL', 1.0, 'buy')
-    print(test_buy)
 
+    sample_trade = {
+        'AAPL': 0.5,
+        'AMZN': -1
+    }
+
+    for stock, quantity in sample_trade.items():
+        # determine whether to buy or sell:
+        if quantity > 0:
+            action = 'buy'
+        else:
+            action = 'sell'
+
+        # print basic information
+        print(f'stock: {stock}, {action}: {abs(quantity)}')
+
+        # send order to API
+        order = execute_order(trade_api, stock, abs(quantity), action)
+
+        # print order information
+        print(order)
