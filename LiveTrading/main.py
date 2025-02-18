@@ -49,6 +49,10 @@ def execute_order(api: tradeapi.rest.REST,
 
 
 def info(api: tradeapi.rest.REST):
+    """
+    :param api: Alpaca API
+    :return: None
+    """
 
     account = api.get_account()
     print(f'''
@@ -57,14 +61,45 @@ def info(api: tradeapi.rest.REST):
     Account Status: {account.status}
     ''')
 
+    # Check how much money we can use to open new positions.
+    print('${} is available as buying power.'.format(account.buying_power))
+
+
+def validate_trade(api: tradeapi.rest.REST, ticker: str, trade: str, amount: float):
+    """
+    :param api: Alpaca API
+    :param ticker: stock ticker
+    :param trade: buy/sell
+    :param amount: amount to be bought or sold
+    :return: True if all checks passed, False otherwise
+    """
+    account = api.get_account()
+
+    cash = float(account.buying_power)
+    max_position = 0.05*cash
+    # latest traded price
+    stock_price = api.get_latest_trade(ticker).price
+    position_size = stock_price * abs(amount)
+
+    checks = {
+        position_size > max_position: 'Position size is too large, trade will not be executed.',
+        account.trading_blocked: 'Account is currently restricted from trading.'
+    }
+
+    failed_check = next((msg for condition, msg in checks.items() if condition), None)
+
+    if failed_check:
+        print(failed_check)
+        return False
+
+    print('All checks passed')
+    return True
+
 
 if __name__ == '__main__':
     trade_api = connect_api()
 
-    sample_trade = {
-        'AAPL': 0.5,
-        'AMZN': -1
-    }
+    sample_trade = {'AAPL': 0.5, 'AMZN': -1}
 
     for stock, quantity in sample_trade.items():
         # determine whether to buy or sell:
@@ -73,11 +108,15 @@ if __name__ == '__main__':
         else:
             action = 'sell'
 
-        # print basic information
-        print(f'stock: {stock}, {action}: {abs(quantity)}')
+        # implement some safety checks here, do we have enough money, does order make sense...
+        if validate_trade(trade_api, stock, action, quantity) is True:
+            # print basic information
+            print(f'stock: {stock}, {action}: {abs(quantity)}')
 
-        # send order to API
-        order = execute_order(trade_api, stock, abs(quantity), action)
+            # send order to API
+            order = execute_order(trade_api, stock, abs(quantity), action)
 
-        # print order information
-        print(order)
+            # print order information
+            print(order)
+        else:
+            print('Trade could not be executed, check input.')
