@@ -25,7 +25,7 @@ def connect_api():
 def execute_order(api: tradeapi.rest.REST,
                   ticker: str,
                   qty: float,
-                  side=str,
+                  side: str,
                   order_type='market',
                   time_in_force='day'):
     """
@@ -63,6 +63,24 @@ def info(api: tradeapi.rest.REST):
 
     # Check how much money we can use to open new positions.
     print('${} is available as buying power.'.format(account.buying_power))
+
+
+def get_open_positions(api):
+    open_positions = api.list_positions()
+
+    # Print overview of open positions
+    if not open_positions:
+        print("No open positions.")
+    else:
+        print("Open Positions Overview:")
+        for position in open_positions:
+            print(f"Symbol: {position.symbol}")
+            #print(f"  Side: {'Long' if int(position.qty) > 0 else 'Short'}")
+            print(f"  Quantity: {position.qty}")
+            print(f"  Current Price: ${position.current_price}")
+            print(f"  Market Value: ${position.market_value}")
+            print(f"  Unrealized P/L: ${position.unrealized_pl}")
+            print("-" * 30)
 
 
 def validate_trade(api: tradeapi.rest.REST, ticker: str, trade: str, amount: float):
@@ -108,7 +126,7 @@ if __name__ == '__main__':
         else:
             action = 'sell'
 
-        # implement some safety checks here, do we have enough money, does order make sense...
+        # some safety checks, do we have enough money, does order make sense...
         if validate_trade(trade_api, stock, action, quantity) is True:
             # print basic information
             print(f'stock: {stock}, {action}: {abs(quantity)}')
@@ -120,3 +138,7 @@ if __name__ == '__main__':
             print(order)
         else:
             print('Trade could not be executed, check input.')
+
+
+        # overview of open positions:
+        get_open_positions(trade_api)
