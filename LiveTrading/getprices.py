@@ -33,7 +33,11 @@ def get_price(ticker_df):
 if __name__ == "__main__":
     sp500_df = pd.read_csv('sp500tickers_short.csv')
 
+    print('Ok1')
+
     out_df, time = get_price(sp500_df)
-    filename=f"sp500_prices_{time}.csv"
+    filename = f"sp500_prices_{time}.csv"
     out_df.to_csv(filename, index=False)
+
+    print('Ok2')
 
